@@ -1,0 +1,102 @@
+local M = {}
+
+local function get_snippets()
+	local snippets = {}
+	local base_path = vim.fn.stdpath("config") .. "/lua/telesnip/snippets/"
+	local languages = vim.fn.readdir(base_path)
+
+	print("Base path: " .. base_path)
+	print("Languages found: " .. vim.inspect(languages))
+
+	for _, lang in ipairs(languages) do
+		local path = base_path .. lang
+		local files = vim.fn.glob(path .. "/*", false, true)
+		print("Files found for " .. lang .. ": " .. vim.inspect(files))
+		for _, file in ipairs(files) do
+			local snippet_name = vim.fn.fnamemodify(file, ":t")
+			table.insert(snippets, {
+				name = snippet_name,
+				path = file,
+				language = lang,
+			})
+		end
+	end
+
+	print("Snippets found: " .. vim.inspect(snippets))
+	return snippets
+end
+
+M.snippet_picker = function()
+	local snippets = get_snippets()
+
+	local opts = require("telescope.themes").get_dropdown({})
+	require("telescope.pickers")
+		.new(opts, {
+			prompt_title = "Snippets",
+			finder = require("telescope.finders").new_table({
+				results = snippets,
+				entry_maker = function(entry)
+					return {
+						value = entry,
+						display = entry.name,
+						ordinal = entry.name,
+						path = entry.path,
+					}
+				end,
+			}),
+			sorter = require("telescope.config").values.generic_sorter(opts),
+			previewer = require("telescope.previewers").new_buffer_previewer({
+				define_preview = function(self, entry)
+					local lines = vim.fn.readfile(entry.path)
+					vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
+					local ext = vim.fn.fnamemodify(entry.path, ":e")
+					vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", ext)
+				end,
+			}),
+			attach_mappings = function(_, map)
+				map("i", "<CR>", function(prompt_bufnr)
+					print("Mapping triggered")
+					local selection = require("telescope.actions.state").get_selected_entry()
+					print("Selected entry: " .. vim.inspect(selection))
+
+					local snippet_content = vim.fn.readfile(selection.path)
+					print("Snippet content (raw): " .. vim.inspect(snippet_content))
+					print("Snippet content (formatted):")
+					for i, line in ipairs(snippet_content) do
+						print(string.format("%d: %s", i, line))
+					end
+
+					local current_buf = vim.api.nvim_get_current_buf()
+					local win = vim.api.nvim_get_current_win()
+					local cursor = vim.api.nvim_win_get_cursor(win)
+					local row, col = cursor[1] - 1, cursor[2]
+
+					print(string.format("Inserting at buffer %d, row %d, col %d", current_buf, row, col))
+
+					-- Insert snippet content at the current cursor position
+					vim.api.nvim_buf_set_text(current_buf, row, col, row, col, snippet_content)
+
+					-- Move cursor to the end of the inserted snippet
+					local new_row = row + #snippet_content
+					local new_col = #snippet_content[#snippet_content]
+					vim.api.nvim_win_set_cursor(win, { new_row, new_col })
+
+					print(string.format("Cursor moved to row %d, col %d", new_row, new_col))
+
+					-- Close Telescope prompt
+					require("telescope.actions").close(prompt_bufnr)
+
+					-- Schedule entering insert mode
+					vim.schedule(function()
+						vim.cmd("stopinsert")
+						vim.cmd("startinsert!")
+						print("Entered insert mode")
+					end)
+				end)
+				return true
+			end,
+		})
+		:find()
+end
+
+return M
