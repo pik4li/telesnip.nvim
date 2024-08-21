@@ -3,7 +3,7 @@ local M = {}
 M.setup = function(user_opts)
 	local opts = user_opts or {}
 	M.snippet_path = opts.snippet_path or (vim.fn.stdpath("data") .. "/lazy/telesnip.nvim/lua/telesnip/snippets/")
-	vim.notify("Snippet path set to: " .. M.snippet_path)
+	vim.notify("Telesnip plugin loaded. Snippet path set to: " .. M.snippet_path)
 end
 
 local function load_snippets(language)
@@ -12,7 +12,7 @@ local function load_snippets(language)
 	local snippets = {}
 
 	if vim.fn.isdirectory(path) == 0 then
-		vim.notify("Directory does not exist: " .. path, vim.log.levels.ERROR)
+		vim.notify("Directory does not exist: " .. path, vim.log.levels.WARN)
 		return {}
 	end
 
@@ -25,8 +25,15 @@ local function load_snippets(language)
 		local file_handle = io.open(full_path, "r")
 		if file_handle then
 			local current_snippet = nil
+			local plugin_name = nil
 			for line in file_handle:lines() do
-				if line:match("^---$") then
+				if line:match("^# <name>$") then
+					plugin_name = "Telesnip"
+					vim.notify("Plugin name set to: " .. plugin_name)
+				elseif line:match("^-- <name>$") then
+					plugin_name = "Telesnip"
+					vim.notify("Plugin name set to: " .. plugin_name)
+				elseif line:match("^---$") then
 					if current_snippet then
 						table.insert(snippets, current_snippet)
 						current_snippet = nil
@@ -49,17 +56,18 @@ local function load_snippets(language)
 	return snippets
 end
 
-M.telesnip_picker = function(language)
-	local snippets = load_snippets(language)
+M.telesnip_picker = function()
+	local current_filetype = vim.bo.filetype
+	local snippets = load_snippets(current_filetype)
 
 	if #snippets == 0 then
-		vim.notify("No snippets found for " .. language, vim.log.levels.WARN)
+		vim.notify("No snippets found for filetype: " .. current_filetype, vim.log.levels.WARN)
 		return
 	end
 
 	require("telescope.pickers")
 		.new({}, {
-			prompt_title = "Snippets (" .. language .. ")",
+			prompt_title = "Snippets (" .. current_filetype .. ")",
 			finder = require("telescope.finders").new_table({
 				results = snippets,
 				entry_maker = function(entry)
@@ -76,6 +84,7 @@ M.telesnip_picker = function(language)
 					local selection = require("telescope.actions.state").get_selected_entry()
 					require("telescope.actions").close(prompt_bufnr)
 					vim.api.nvim_put(vim.split(selection.value, "\n"), "", true, true)
+					vim.notify("Snippet inserted from the " .. current_filetype .. " directory.")
 				end)
 				return true
 			end,
