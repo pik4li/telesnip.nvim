@@ -1,8 +1,13 @@
 local M = {}
 
+local getPath = function(str, sep)
+	sep = sep or "/"
+	return str:match("(.*" .. sep .. ")")
+end
+
 local function get_snippets()
 	local snippets = {}
-	local plugin_path = debug.getinfo(1).source:sub(2)
+	local plugin_path = vim.fn.readdir(getPath(debug.getinfo(1).source:sub(2)))
 	local base_path = vim.fn.stdpath(plugin_path) .. "/lua/telesnip/snippets/"
 	local languages = vim.fn.readdir(base_path)
 
