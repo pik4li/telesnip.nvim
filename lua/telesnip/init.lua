@@ -7,6 +7,7 @@ end
 
 local function load_snippets(language)
 	local path = M.snippet_path .. language .. "/"
+	vim.notify("Loading snippets from path: " .. path)
 	local snippets = {}
 
 	for _, file in ipairs(vim.fn.readdir(path)) do
@@ -15,7 +16,7 @@ local function load_snippets(language)
 		if status then
 			table.insert(snippets, snippet_content)
 		else
-			print("Failed to load snippet from", full_path, ":", snippet_content)
+			vim.notify("Failed to load snippet from " .. full_path .. ": " .. snippet_content)
 		end
 	end
 
