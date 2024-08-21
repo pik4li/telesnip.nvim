@@ -23,8 +23,8 @@ local function load_snippets(language)
 end
 
 M.snippet_picker = function()
-	local current_filetype = vim.bo.filetype
-	vim.notify("Detected filetype: " .. current_filetype)
+	local current_filetype = vim.fn.expand("%:e")
+	vim.notify("Detected file extension: " .. current_filetype)
 	local snippets = load_snippets(current_filetype)
 
 	if vim.tbl_isempty(snippets) then
