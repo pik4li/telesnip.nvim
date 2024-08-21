@@ -56,7 +56,7 @@ local function load_snippets(language)
 	return snippets
 end
 
-M.telesnip_snippets = function()
+M.snippets = function()
 	local current_filetype = vim.bo.filetype
 	local snippets = load_snippets(current_filetype)
 
@@ -89,18 +89,11 @@ M.telesnip_snippets = function()
 			}),
 			attach_mappings = function(_, map)
 				map("i", "<CR>", function(prompt_bufnr)
-					local selections = require("telescope.actions.state").get_selected_entries()
+					local selection = require("telescope.actions.state").get_selected_entry()
 					require("telescope.actions").close(prompt_bufnr)
-					for _, selection in ipairs(selections) do
-						vim.api.nvim_put(vim.split(selection.value, "\n"), "", true, true)
-						vim.notify("Snippet inserted from the " .. current_filetype .. " directory.")
-					end
+					vim.api.nvim_put(vim.split(selection.value, "\n"), "", true, true)
+					vim.notify("Snippet inserted from the " .. current_filetype .. " directory.")
 				end)
-
-				map("i", "<C-l>", function(prompt_bufnr)
-					require("telescope.actions").select_horizontal(prompt_bufnr)
-				end)
-
 				return true
 			end,
 		})
