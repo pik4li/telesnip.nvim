@@ -6,13 +6,19 @@ M.setup = function(opts)
 end
 
 local function load_snippets(language)
-	local path = M.snippet_path .. language .. ".lua"
-	print("Loading snippets from path:", path)
-	local status, snippets = pcall(dofile, path)
-	if not status then
-		print("Failed to load snippets:", snippets)
-		return {}
+	local path = M.snippet_path .. language .. "/"
+	local snippets = {}
+
+	for _, file in ipairs(vim.fn.readdir(path)) do
+		local full_path = path .. file
+		local status, snippet_content = pcall(dofile, full_path)
+		if status then
+			table.insert(snippets, snippet_content)
+		else
+			print("Failed to load snippet from", full_path, ":", snippet_content)
+		end
 	end
+
 	return snippets
 end
 
