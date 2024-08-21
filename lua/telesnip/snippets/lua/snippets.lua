@@ -1,4 +1,4 @@
-greetings
+-- greetings
 -- ─< simple lua function >─────────────────────────────────────────────────────────────
 local my_name = "pika"
 local function greetings(name)

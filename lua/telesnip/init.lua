@@ -100,4 +100,38 @@ M.snippets = function()
 		:find()
 end
 
+M.save_custom_snippet = function()
+	local current_filetype = vim.bo.filetype
+	local custom_snippet_path = M.snippet_path .. "custom" .. "." .. current_filetype
+
+	-- Get the selected text
+	local selected_text = ""
+	local success, result = pcall(function()
+		return vim.api.nvim_exec('normal! gv"zy', true)
+	end)
+	if success then
+		selected_text = vim.fn.getreg("z")
+	else
+		vim.notify("No text selected to create a custom snippet.", vim.log.levels.WARN)
+		return
+	end
+
+	local function_name = vim.fn.input("Enter a name for the custom snippet: ")
+	if function_name == "" then
+		vim.notify("No name provided for the custom snippet.", vim.log.levels.WARN)
+		return
+	end
+
+	local snippet_content = "-- " .. function_name .. "\n \n" .. selected_text .. "\n---\n"
+
+	local file_handle = io.open(custom_snippet_path, "a")
+	if file_handle then
+		file_handle:write(snippet_content .. "\n")
+		file_handle:close()
+		vim.notify("Custom snippet saved to: " .. custom_snippet_path)
+	else
+		vim.notify("Failed to write the custom snippet to: " .. custom_snippet_path, vim.log.levels.ERROR)
+	end
+end
+
 return M
