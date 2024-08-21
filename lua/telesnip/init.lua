@@ -56,7 +56,7 @@ local function load_snippets(language)
 	return snippets
 end
 
-M.telesnip_picker = function()
+M.snippets = function()
 	local current_filetype = vim.bo.filetype
 	local snippets = load_snippets(current_filetype)
 
@@ -79,6 +79,14 @@ M.telesnip_picker = function()
 				end,
 			}),
 			sorter = require("telescope.config").values.generic_sorter({}),
+			previewer = require("telescope.previewers").new_buffer_previewer({
+				define_preview = function(self, entry)
+					vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.split(entry.value, "\n"))
+					local filetype = current_filetype
+					vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", filetype)
+					vim.api.nvim_buf_set_option(self.state.bufnr, "modifiable", false)
+				end,
+			}),
 			attach_mappings = function(_, map)
 				map("i", "<CR>", function(prompt_bufnr)
 					local selection = require("telescope.actions.state").get_selected_entry()
