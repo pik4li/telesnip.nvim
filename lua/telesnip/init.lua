@@ -24,8 +24,7 @@ end
 
 M.snippet_picker = function()
 	local current_filetype = vim.bo.filetype
-	print("Detected filetype:", current_filetype)
-	vim.notify("Detected filetype:", print(current_filetype))
+	vim.notify("Detected filetype: " .. current_filetype)
 	local snippets = load_snippets(current_filetype)
 
 	if vim.tbl_isempty(snippets) then
