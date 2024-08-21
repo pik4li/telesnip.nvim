@@ -2,7 +2,8 @@ local M = {}
 
 local function get_snippets()
 	local snippets = {}
-	local base_path = "$HOME/.local/share/nvim/lazy/telesnip.nvim/lua/telesnip/snippets/"
+	local plugin_path = debug.getinfo(1).source:sub(2)
+	local base_path = vim.fn.stdpath(plugin_path) .. "/lua/telesnip/snippets/"
 	local languages = vim.fn.readdir(base_path)
 
 	for _, lang in ipairs(languages) do
