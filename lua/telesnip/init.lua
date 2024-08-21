@@ -6,10 +6,11 @@ M.setup = function(opts)
 end
 
 local function load_snippets(language)
-	-- Load snippets based on the provided filetype
 	local path = M.snippet_path .. language .. ".lua"
+	print("Loading snippets from path:", path)
 	local status, snippets = pcall(dofile, path)
 	if not status then
+		print("Failed to load snippets:", snippets)
 		return {}
 	end
 	return snippets
@@ -17,6 +18,7 @@ end
 
 M.snippet_picker = function()
 	local current_filetype = vim.bo.filetype
+	print("Detected filetype:", current_filetype)
 	local snippets = load_snippets(current_filetype)
 
 	if vim.tbl_isempty(snippets) then
@@ -24,7 +26,6 @@ M.snippet_picker = function()
 		return
 	end
 
-	-- Your Telescope picker logic here...
 	require("telescope.pickers")
 		.new({}, {
 			prompt_title = "Snippets",
