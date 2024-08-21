@@ -1,100 +1,65 @@
 local M = {}
 
-local getPath = function(str, sep)
-	sep = sep or "/"
-	return str:match("(.*" .. sep .. ")")
+M.setup = function(opts)
+	-- Set the snippet path, defaulting to the Lazy.nvim plugin path if not provided
+	M.snippet_path = opts.snippet_path or vim.fn.stdpath("data") .. "/lazy/telesnip.nvim/lua/telesnip/snippets/"
 end
 
-local function get_snippets()
-	local snippets = {}
-	local plugin_path = vim.fn.readdir(getPath(debug.getinfo(1).source:sub(2)))
-	local base_path = vim.fn.stdpath(plugin_path) .. "/lua/telesnip/snippets/"
-	local languages = vim.fn.readdir(base_path)
-
-	for _, lang in ipairs(languages) do
-		local path = base_path .. lang
-		local files = vim.fn.glob(path .. "/*", false, true)
-		for _, file in ipairs(files) do
-			local snippet_name = vim.fn.fnamemodify(file, ":t")
-			table.insert(snippets, {
-				name = snippet_name,
-				path = file,
-				language = lang,
-			})
-		end
+local function load_snippets(language)
+	-- Load snippets based on the provided filetype
+	local path = M.snippet_path .. language .. ".lua"
+	local status, snippets = pcall(dofile, path)
+	if not status then
+		return {}
 	end
-
 	return snippets
 end
 
-local function save_snippet(snippet_content, snippet_name, language)
-	local base_path = vim.fn.stdpath("config") .. "/lua/telesnip/snippets/"
-	local file_path = base_path .. language .. "/" .. snippet_name .. ".txt"
-
-	-- Write the snippet to the file
-	vim.fn.writefile(snippet_content, file_path)
-	print("Snippet saved as " .. snippet_name .. " in " .. language .. " folder.")
-end
-
 M.snippet_picker = function()
-	local mode = vim.fn.mode()
-	if mode == "v" then
-		-- Capture the selected text in visual mode
-		local snippet_content = vim.fn.getline("'<", "'>")
-		local snippet_name = vim.fn.input("Enter snippet name: ")
+	local current_filetype = vim.bo.filetype
+	local snippets = load_snippets(current_filetype)
 
-		-- Optionally, ask for the language
-		local language = vim.fn.input("Enter language folder name: ")
-
-		-- Save the snippet
-		save_snippet(snippet_content, snippet_name, language)
-	else
-		-- Normal snippet picker behavior
-		local snippets = get_snippets()
-
-		local opts = require("telescope.themes").get_dropdown({})
-		require("telescope.pickers")
-			.new(opts, {
-				prompt_title = "Snippets",
-				finder = require("telescope.finders").new_table({
-					results = snippets,
-					entry_maker = function(entry)
-						return {
-							value = entry,
-							display = entry.name,
-							ordinal = entry.name,
-							path = entry.path,
-						}
-					end,
-				}),
-				sorter = require("telescope.config").values.generic_sorter(opts),
-				previewer = require("telescope.previewers").new_buffer_previewer({
-					define_preview = function(self, entry)
-						local lines = vim.fn.readfile(entry.path)
-						vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, lines)
-						local ext = vim.fn.fnamemodify(entry.path, ":e")
-						vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", ext)
-					end,
-				}),
-				attach_mappings = function(_, map)
-					map("i", "<CR>", function(prompt_bufnr)
-						local selection = require("telescope.actions.state").get_selected_entry()
-						local snippet_content = vim.fn.readfile(selection.path)
-
-						-- Close Telescope prompt
-						require("telescope.actions").close(prompt_bufnr)
-
-						-- Insert snippet directly into the buffer
-						vim.api.nvim_put(snippet_content, "l", true, true)
-
-						-- Notify user
-						print("Snippet inserted.")
-					end)
-					return true
-				end,
-			})
-			:find()
+	if vim.tbl_isempty(snippets) then
+		vim.notify("No snippets found for " .. current_filetype, vim.log.levels.WARN)
+		return
 	end
+
+	-- Your Telescope picker logic here...
+	require("telescope.pickers")
+		.new({}, {
+			prompt_title = "Snippets",
+			finder = require("telescope.finders").new_table({
+				results = vim.tbl_map(function(s)
+					return s.name
+				end, snippets),
+			}),
+			sorter = require("telescope.config").values.generic_sorter({}),
+			attach_mappings = function(prompt_bufnr, map)
+				local function insert_snippet(selected_snippet)
+					local snippet = vim.tbl_filter(function(s)
+						return s.name == selected_snippet
+					end, snippets)[1].snippet
+					vim.api.nvim_put({ snippet }, "", true, true)
+					vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+					vim.cmd("stopinsert")
+				end
+
+				map("i", "<CR>", function()
+					local selection = require("telescope.actions.state").get_selected_entry(prompt_bufnr)
+					require("telescope.actions").close(prompt_bufnr)
+					insert_snippet(selection.value)
+				end)
+
+				map("n", "<CR>", function()
+					local selection = require("telescope.actions.state").get_selected_entry(prompt_bufnr)
+					require("telescope.actions").close(prompt_bufnr)
+					insert_snippet(selection.value)
+				end)
+
+				return true
+			end,
+		})
+		:find()
 end
 
 return M
