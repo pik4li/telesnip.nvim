@@ -3,7 +3,9 @@ local M = {}
 M.setup = function(user_opts)
 	local opts = user_opts or {}
 	M.snippet_path = opts.snippet_path or (vim.fn.stdpath("data") .. "/lazy/telesnip.nvim/lua/telesnip/snippets/")
-	vim.notify("Telesnip plugin loaded. Snippet path set to: " .. M.snippet_path)
+	M.custom_snippet_path = opts.custom_snippet_path or (vim.fn.stdpath("config") .. "/snippets/")
+	vim.notify("Telesnip-Snippet path set to: " .. M.snippet_path)
+	vim.notify("Custom Telesnip-Snippet path set to: " .. M.custom_snippet_path)
 end
 
 local function load_snippets(language)
@@ -56,7 +58,7 @@ local function load_snippets(language)
 	return snippets
 end
 
-M.snippets = function()
+M.telesnip_show = function()
 	local current_filetype = vim.bo.filetype
 	local snippets = load_snippets(current_filetype)
 
@@ -102,7 +104,7 @@ end
 
 M.save_custom_snippet = function()
 	local current_filetype = vim.bo.filetype
-	local custom_snippet_path = M.snippet_path .. "custom" .. "." .. current_filetype
+	local custom_snippet_file_path = M.custom_snippet_path .. "custom" .. "." .. current_filetype
 
 	-- Get the selected text
 	local selected_text = ""
@@ -124,13 +126,13 @@ M.save_custom_snippet = function()
 
 	local snippet_content = "-- " .. function_name .. "\n \n" .. selected_text .. "\n---\n"
 
-	local file_handle = io.open(custom_snippet_path, "a")
+	local file_handle = io.open(custom_snippet_file_path, "a")
 	if file_handle then
 		file_handle:write(snippet_content .. "\n")
 		file_handle:close()
-		vim.notify("Custom snippet saved to: " .. custom_snippet_path)
+		vim.notify("Custom snippet saved to: " .. custom_snippet_file_path)
 	else
-		vim.notify("Failed to write the custom snippet to: " .. custom_snippet_path, vim.log.levels.ERROR)
+		vim.notify("Failed to write the custom snippet to: " .. custom_snippet_file_path, vim.log.levels.ERROR)
 	end
 end
 
