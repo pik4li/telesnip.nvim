@@ -55,57 +55,96 @@ local function load_snippets(language)
 	return snippets
 end
 
--- Function to handle snippet placeholders
 local function handle_placeholders(snippet_content)
-	-- Find all placeholders like ${n:word}
+	-- Find all placeholders like ${n:word} and process them
 	local placeholders = {}
 	local index = 0
 	local modified_snippet = snippet_content:gsub("%${(%d+):([^}]+)}", function(number, text)
 		index = index + 1
 		table.insert(placeholders, { number = tonumber(number), text = text, index = index })
-		return text -- Replace placeholder with the text
+		return text -- Replace the placeholder with just the word
 	end)
 
-	-- Insert snippet and position cursor at the first placeholder
+	-- Insert the snippet content without placeholders
 	vim.api.nvim_put(vim.split(modified_snippet, "\n"), "", false, true)
 
 	if #placeholders > 0 then
-		-- Sort placeholders by their numbers to ensure the cursor moves in the correct order
+		-- Sort placeholders by number for sequential navigation
 		table.sort(placeholders, function(a, b)
 			return a.number < b.number
 		end)
 
-		-- Position cursor at the first placeholder
+		-- Jump to the first placeholder and set up insert mode
 		local first_placeholder = placeholders[1]
 		local line, col = unpack(vim.fn.searchpos(first_placeholder.text, "cn"))
 
 		if line > 0 and col > 0 then
 			vim.api.nvim_win_set_cursor(0, { line, col - 1 })
+			vim.cmd("startinsert!")
 		end
 
-		-- Set up a keybinding for jumping to the next placeholder
+		-- Set up mappings for navigating between placeholders
 		vim.cmd([[nnoremap <silent> <Tab> :lua require('telesnip').jump_to_next_placeholder()<CR>]])
 		vim.cmd([[inoremap <silent> <Tab> <Esc>:lua require('telesnip').jump_to_next_placeholder()<CR>]])
+
+		-- Set up autocommands to remove the placeholder text when typing
+		vim.cmd([[
+      augroup TelesnipPlaceholder
+        autocmd!
+        autocmd InsertCharPre * lua require('telesnip').remove_placeholder()
+      augroup END
+    ]])
 	end
 end
 
--- Function to jump to the next placeholder
+local active_placeholder = nil
+
+M.remove_placeholder = function()
+	if active_placeholder then
+		local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+		local current_line = vim.fn.getline(line)
+
+		-- Find the position of the active placeholder text
+		local placeholder_pos = string.find(current_line, vim.pesc(active_placeholder.text), col)
+
+		if placeholder_pos then
+			-- Replace the placeholder text with what the user is typing
+			local new_line = current_line:sub(1, placeholder_pos - 1) .. current_line:sub(col)
+			vim.api.nvim_buf_set_lines(0, line - 1, line, false, { new_line })
+			vim.api.nvim_win_set_cursor(0, { line, placeholder_pos - 1 })
+			-- Clear active placeholder
+			active_placeholder = nil
+
+			-- Remove autocommand after first character is typed
+			vim.cmd([[
+        augroup TelesnipPlaceholder
+          autocmd!
+        augroup END
+      ]])
+		end
+	end
+end
+
 M.jump_to_next_placeholder = function()
 	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 	local current_line = vim.fn.getline(line)
 
-	-- Search for the next placeholder
+	-- Find the next placeholder position
 	local next_placeholder_pos = string.find(current_line, "%${%d+:[^}]+}", col + 1)
 	if next_placeholder_pos then
 		vim.api.nvim_win_set_cursor(0, { line, next_placeholder_pos })
+		vim.cmd("startinsert!")
+		active_placeholder = { text = current_line:match("%${%d+:([^}]+)}", next_placeholder_pos) }
 	else
-		-- If no placeholder is found, search in the next lines
+		-- If no more placeholders in current line, search in next lines
 		local next_line = line + 1
 		while next_line <= vim.fn.line("$") do
 			local next_line_content = vim.fn.getline(next_line)
-			local next_pos = string.find(next_line_content, "%${%d+:[^}]+}")
+			local next_pos = string.find(next_line_content, "%${%d+:([^}]+)}")
 			if next_pos then
 				vim.api.nvim_win_set_cursor(0, { next_line, next_pos })
+				vim.cmd("startinsert!")
+				active_placeholder = { text = next_line_content:match("%${%d+:([^}]+)}", next_pos) }
 				break
 			end
 			next_line = next_line + 1
@@ -165,7 +204,6 @@ M.telesnip_show = function()
 					local selection = action_state.get_selected_entry()
 					handle_placeholders(selection.value)
 					vim.notify("Snippet inserted: " .. selection.display)
-					vim.cmd("stopinsert") -- Stay in normal mode
 				end)
 				return true
 			end,
