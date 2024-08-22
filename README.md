@@ -59,11 +59,10 @@ The standard snippets directory is under the lazy folder in `~/.local/share/nvim
 
 Snippets are saved in one file, using `---` as a seperator and the first line after `---` is the name of the snippet
 
-> [!TIP]
+> [!INFO]
 > Here is the standard snippets.sh file for reference:
 >
 > ```bash
->
 > # check_root
 > # Check if the user is root and set sudo variable if necessary
 > check_root() {
