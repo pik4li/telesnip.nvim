@@ -34,7 +34,7 @@ Install using your favorite Neovim package manager:
 	end,
 	keys = {
 		-- ─< just the standard two keybindings I configured. Be sure to make your own one, if you'd like >─
-		{ "<leader>S", "<cmd>TelesnipShowSnippets<CR>", desc = "Open Snippet Picker" },
+		{ "<leader>sm", "<cmd>TelesnipShowSnippets<CR>", desc = "Open Snippet Picker" },
 		{ "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", mode = "v", desc = "Save Custom Snippet" },
 	},
 }
@@ -128,10 +128,6 @@ MIT License. See `LICENSE` for more information.
 - [x] Let telescope show preconfigured snippets out of the `telesnip/snippets/<language>/` directory
 - [x] Paste the snippet in directly at your cursor
 - [x] Add snippets easily by selecting it in visual mode and calling the plugin as usual
-- [ ] Understand the code 100%
-
-# Showcase
-
-```
-
-```
+- [ ] Add functionality to filter/store in categories
+- [ ] Maybe refactor the code to get the default snippets from another place
+- [-] Understand the code 100%
