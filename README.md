@@ -16,8 +16,9 @@ Install using your favorite Neovim package manager:
 ### Using [Lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
-{
+return {
   "https://git.k4li.de/pika/telesnip.nvim",
+  dependencies = "nvim-telescope/telescope.nvim",
   opts = {
     -- snippet_path = "/path/to/your/snippets",
     -- custom_snippet_path = "/path/to/your/custom/snippets",
@@ -27,7 +28,7 @@ Install using your favorite Neovim package manager:
   end,
   keys = {
     { "<leader>S",  "<cmd>TelesnipShowSnippets<CR>",  desc = "Open Snippet Picker" },
-    { "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", mode = "v",                  desc = "Save Custom Snippet" },
+    { "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", mode = "v", desc = "Save Custom Snippet" },
   },
 }
 ```
