@@ -1,5 +1,8 @@
 local M = {}
 
+local active_placeholder = nil
+local placeholders = {}
+
 local function create_commands()
 	vim.api.nvim_create_user_command("TelesnipShowSnippets", function()
 		require("telesnip").telesnip_show()
@@ -55,99 +58,111 @@ local function load_snippets(language)
 	return snippets
 end
 
+local function display_virtual_text_at_placeholder(placeholder)
+	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
+	vim.api.nvim_buf_set_extmark(0, vim.api.nvim_create_namespace("Telesnip"), line - 1, col - 1, {
+		virt_text = { { placeholder.text, "Comment" } },
+		hl_mode = "combine",
+		ephemeral = true,
+	})
+end
+
+local function clear_virtual_text()
+	vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_create_namespace("Telesnip"), 0, -1)
+end
+
 local function handle_placeholders(snippet_content)
-	-- Find all placeholders like ${n:word} and process them
-	local placeholders = {}
+	-- Parse the snippet content and find placeholders
+	placeholders = {}
 	local index = 0
 	local modified_snippet = snippet_content:gsub("%${(%d+):([^}]+)}", function(number, text)
 		index = index + 1
 		table.insert(placeholders, { number = tonumber(number), text = text, index = index })
-		return text -- Replace the placeholder with just the word
+		return text -- Replace placeholder with the text
 	end)
 
-	-- Insert the snippet content without placeholders
+	-- Insert modified snippet
 	vim.api.nvim_put(vim.split(modified_snippet, "\n"), "", false, true)
 
 	if #placeholders > 0 then
-		-- Sort placeholders by number for sequential navigation
+		-- Sort placeholders by number
 		table.sort(placeholders, function(a, b)
 			return a.number < b.number
 		end)
 
-		-- Jump to the first placeholder and set up insert mode
-		local first_placeholder = placeholders[1]
-		local line, col = unpack(vim.fn.searchpos(first_placeholder.text, "cn"))
+		-- Jump to the first placeholder and display virtual text
+		active_placeholder = placeholders[1]
+		local line, col = unpack(vim.fn.searchpos(active_placeholder.text, "cn"))
 
 		if line > 0 and col > 0 then
 			vim.api.nvim_win_set_cursor(0, { line, col - 1 })
 			vim.cmd("startinsert!")
+			display_virtual_text_at_placeholder(active_placeholder)
 		end
 
-		-- Set up mappings for navigating between placeholders
-		vim.cmd([[nnoremap <silent> <Tab> :lua require('telesnip').jump_to_next_placeholder()<CR>]])
+		-- Setup <Tab> to jump to next placeholder
 		vim.cmd([[inoremap <silent> <Tab> <Esc>:lua require('telesnip').jump_to_next_placeholder()<CR>]])
 
-		-- Set up autocommands to remove the placeholder text when typing
+		-- Setup autocommand to clear virtual text when typing
 		vim.cmd([[
-      augroup TelesnipPlaceholder
-        autocmd!
-        autocmd InsertCharPre * lua require('telesnip').remove_placeholder()
-      augroup END
-    ]])
+            augroup TelesnipPlaceholder
+                autocmd!
+                autocmd InsertCharPre * lua require('telesnip').remove_placeholder()
+            augroup END
+        ]])
 	end
 end
-
-local active_placeholder = nil
 
 M.remove_placeholder = function()
 	if active_placeholder then
 		local line, col = unpack(vim.api.nvim_win_get_cursor(0))
 		local current_line = vim.fn.getline(line)
 
-		-- Find the position of the active placeholder text
+		-- Find position of active placeholder text
 		local placeholder_pos = string.find(current_line, vim.pesc(active_placeholder.text), col)
-
 		if placeholder_pos then
-			-- Replace the placeholder text with what the user is typing
+			-- Replace the placeholder with what the user is typing
 			local new_line = current_line:sub(1, placeholder_pos - 1) .. current_line:sub(col)
 			vim.api.nvim_buf_set_lines(0, line - 1, line, false, { new_line })
 			vim.api.nvim_win_set_cursor(0, { line, placeholder_pos - 1 })
-			-- Clear active placeholder
 			active_placeholder = nil
+
+			-- Clear virtual text
+			clear_virtual_text()
 
 			-- Remove autocommand after first character is typed
 			vim.cmd([[
-        augroup TelesnipPlaceholder
-          autocmd!
-        augroup END
-      ]])
+                augroup TelesnipPlaceholder
+                    autocmd!
+                augroup END
+            ]])
 		end
 	end
 end
 
 M.jump_to_next_placeholder = function()
+	local current_placeholder = nil
 	local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-	local current_line = vim.fn.getline(line)
+	clear_virtual_text()
 
-	-- Find the next placeholder position
-	local next_placeholder_pos = string.find(current_line, "%${%d+:[^}]+}", col + 1)
-	if next_placeholder_pos then
-		vim.api.nvim_win_set_cursor(0, { line, next_placeholder_pos })
-		vim.cmd("startinsert!")
-		active_placeholder = { text = current_line:match("%${%d+:([^}]+)}", next_placeholder_pos) }
+	for i, placeholder in ipairs(placeholders) do
+		if line == vim.fn.line(".") and col == vim.fn.col(".") - 1 then
+			current_placeholder = i
+		end
+	end
+
+	if current_placeholder and placeholders[current_placeholder + 1] then
+		active_placeholder = placeholders[current_placeholder + 1]
 	else
-		-- If no more placeholders in current line, search in next lines
-		local next_line = line + 1
-		while next_line <= vim.fn.line("$") do
-			local next_line_content = vim.fn.getline(next_line)
-			local next_pos = string.find(next_line_content, "%${%d+:([^}]+)}")
-			if next_pos then
-				vim.api.nvim_win_set_cursor(0, { next_line, next_pos })
-				vim.cmd("startinsert!")
-				active_placeholder = { text = next_line_content:match("%${%d+:([^}]+)}", next_pos) }
-				break
-			end
-			next_line = next_line + 1
+		active_placeholder = placeholders[1]
+	end
+
+	if active_placeholder then
+		local line, col = unpack(vim.fn.searchpos(active_placeholder.text, "cn"))
+		if line > 0 and col > 0 then
+			vim.api.nvim_win_set_cursor(0, { line, col - 1 })
+			vim.cmd("startinsert!")
+			display_virtual_text_at_placeholder(active_placeholder)
 		end
 	end
 end
@@ -222,10 +237,8 @@ M.save_custom_snippet = function()
 	local current_filetype = vim.bo.filetype
 	local custom_snippet_file_path = M.custom_snippet_path .. "custom." .. current_filetype
 
-	-- Create the directory if it doesn't exist
 	vim.fn.mkdir(M.custom_snippet_path, "p")
 
-	-- Get the selected text in visual mode, including full line selection with <S-v>
 	local start_pos = vim.fn.getpos("'<")
 	local end_pos = vim.fn.getpos("'>")
 	local lines = vim.fn.getline(start_pos[2], end_pos[2])
@@ -248,7 +261,6 @@ M.save_custom_snippet = function()
 	local actions = require("telescope.actions")
 	local action_state = require("telescope.actions.state")
 
-	-- Use Telescope to preview the snippet and input the name
 	pickers
 		.new({}, {
 			prompt_title = "Save Custom Snippet",
@@ -281,7 +293,6 @@ M.save_custom_snippet = function()
 
 					actions.close(prompt_bufnr)
 
-					-- Format the snippet content and save it
 					local snippet_content = "-- " .. snippet_name .. "\n" .. selected_text .. "\n---\n"
 					local file_handle = io.open(custom_snippet_file_path, "a")
 					if file_handle then
@@ -295,8 +306,7 @@ M.save_custom_snippet = function()
 						)
 					end
 
-					-- Return to original buffer and position
-					vim.cmd("stopinsert") -- Ensure normal mode
+					vim.cmd("stopinsert")
 				end)
 				return true
 			end,
@@ -310,7 +320,5 @@ M.save_custom_snippet = function()
 		})
 		:find()
 end
-
-create_commands()
 
 return M
