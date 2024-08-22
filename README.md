@@ -129,5 +129,6 @@ MIT License. See `LICENSE` for more information.
 - [x] Paste the snippet in directly at your cursor
 - [x] Add snippets easily by selecting it in visual mode and calling the plugin as usual
 - [ ] Add functionality to filter/store in categories
+- [ ] Configure snippets, so that you can auto jump into specific code elements
 - [ ] Maybe refactor the code to get the default snippets from another place
 - [-] Understand the code 100%
