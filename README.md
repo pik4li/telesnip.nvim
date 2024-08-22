@@ -18,7 +18,7 @@ Install using your favorite Neovim package manager:
 
 ```lua
 {
-	"https://git.k4li.de/pika/telesnip.nvim",
+    "pik4li/telesnip.nvim",
 	dependencies = "nvim-telescope/telescope.nvim",
 	opts = {
 		-- ╭────────────────────────────────────────────────────────────────────────╮
@@ -52,6 +52,11 @@ Install using your favorite Neovim package manager:
 1. Select the code you want to save as a snippet in visual mode.
 2. Press the keybinding you've set up for `:TelesnipCustomSnippet` in visual mode.
 3. Your selected snippet will be previewed with telescope. Type in a name and hit <Enter> to save your snippet.
+
+> [!WARNING]
+> Currently, this is a bit broken. It reads from the 'copy' buffer, so you may have to copy your content, and then may concider, to remove the `mode = "v",` line in your config for the keymap!
+> Also it does not work when 'full line' selecting in neovim, so when pressing <s-v>. It will only work when normally selecting. It is, as said, kind of broken.
+> For convenience: `{ "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", desc = "Save Custom Snippet" },`
 
 ## Configuration
 
@@ -125,9 +130,11 @@ MIT License. See `LICENSE` for more information.
 
 ### ToDo
 
+- [-] Adding more snippets (always WIP)
 - [x] Let telescope show preconfigured snippets out of the `telesnip/snippets/<language>/` directory
 - [x] Paste the snippet in directly at your cursor
 - [x] Add snippets easily by selecting it in visual mode and calling the plugin as usual
+- [-] Fixing the custom snippets
 - [ ] Add functionality to filter/store in categories
 - [ ] Configure snippets, so that you can auto jump into specific code elements
 - [ ] Maybe refactor the code to get the default snippets from another place
