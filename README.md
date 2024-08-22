@@ -17,10 +17,18 @@ Install using your favorite Neovim package manager:
 
 ```lua
 {
-    "pika/telesnip.nvim",
-    config = function()
-        require("telesnip").setup({})
-    end,
+  "https://git.k4li.de/pika/telesnip.nvim",
+  opts = {
+    -- snippet_path = "/path/to/your/snippets",
+    -- custom_snippet_path = "/path/to/your/custom/snippets",
+  },
+  config = function(_, opts)
+    require("telesnip").setup(opts)
+  end,
+  keys = {
+    { "<leader>S",  "<cmd>TelesnipShowSnippets<CR>",  desc = "Open Snippet Picker" },
+    { "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", mode = "v",                  desc = "Save Custom Snippet" },
+  },
 }
 ```
 
