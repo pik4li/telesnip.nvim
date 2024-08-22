@@ -55,7 +55,9 @@ Install using your favorite Neovim package manager:
 
 > [!WARNING]
 > Currently, this is a bit broken. It reads from the 'copy' buffer, so you may have to copy your content, and then may concider, to remove the `mode = "v",` line in your config for the keymap!
+>
 > Also it does not work when 'full line' selecting in neovim, so when pressing <s-v>. It will only work when normally selecting. It is, as said, kind of broken.
+>
 > For convenience: `{ "<leader>cs", "<cmd>TelesnipCustomSnippet<CR>", desc = "Save Custom Snippet" },`
 
 ## Configuration
