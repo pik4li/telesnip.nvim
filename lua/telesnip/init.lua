@@ -121,8 +121,6 @@ M.telesnip_show = function()
     layout_strategy = "vertical",
   }):find()
 
-  -- Switch to insert mode after opening Telescope
-  vim.cmd("startinsert")
 end
 
 M.save_custom_snippet = function()
