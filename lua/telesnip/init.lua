@@ -9,51 +9,38 @@ M.setup = function(user_opts)
 end
 
 local function load_snippets(language)
-	local path = M.snippet_path .. language .. "/"
-	vim.notify("Loading snippets from path: " .. path)
 	local snippets = {}
+	local plugin_snippet_file = M.snippet_path .. "snippets." .. language
+	local custom_snippet_file = M.custom_snippet_path .. "custom." .. language
 
-	if vim.fn.isdirectory(path) == 0 then
-		vim.notify("Directory does not exist: " .. path, vim.log.levels.WARN)
-		return {}
-	end
-
-	-- Process all files in the directory
-	for _, file in ipairs(vim.fn.readdir(path)) do
-		local full_path = path .. file
-		vim.notify("Attempting to load snippet file: " .. full_path)
-
-		-- Read the file content
-		local file_handle = io.open(full_path, "r")
-		if file_handle then
-			local current_snippet = nil
-			local plugin_name = nil
-			for line in file_handle:lines() do
-				if line:match("^# <name>$") then
-					plugin_name = "Telesnip"
-					vim.notify("Plugin name set to: " .. plugin_name)
-				elseif line:match("^-- <name>$") then
-					plugin_name = "Telesnip"
-					vim.notify("Plugin name set to: " .. plugin_name)
-				elseif line:match("^---$") then
-					if current_snippet then
-						table.insert(snippets, current_snippet)
-						current_snippet = nil
+	local function load_from_file(file_path)
+		if vim.fn.filereadable(file_path) == 1 then
+			local file_handle = io.open(file_path, "r")
+			if file_handle then
+				local current_snippet = nil
+				for line in file_handle:lines() do
+					if line:match("^---$") then
+						if current_snippet then
+							table.insert(snippets, current_snippet)
+							current_snippet = nil
+						end
+					elseif not current_snippet then
+						current_snippet = { title = line:gsub("^%-%- ", ""), content = "" }
+					else
+						current_snippet.content = current_snippet.content .. line .. "\n"
 					end
-				elseif not current_snippet then
-					current_snippet = { title = line, content = "" }
-				else
-					current_snippet.content = current_snippet.content .. line .. "\n"
 				end
+				if current_snippet then
+					table.insert(snippets, current_snippet)
+				end
+				file_handle:close()
+				vim.notify("Snippets loaded from: " .. file_path)
 			end
-			if current_snippet then
-				table.insert(snippets, current_snippet)
-			end
-			file_handle:close()
-		else
-			vim.notify("Failed to open snippet file: " .. full_path, vim.log.levels.ERROR)
 		end
 	end
+
+	load_from_file(plugin_snippet_file)
+	load_from_file(custom_snippet_file)
 
 	return snippets
 end
@@ -76,16 +63,19 @@ M.telesnip_show = function()
 					return {
 						value = entry.content,
 						display = entry.title,
-						ordinal = entry.title,
+						ordinal = entry.title .. " " .. entry.content,
 					}
 				end,
 			}),
 			sorter = require("telescope.config").values.generic_sorter({}),
 			previewer = require("telescope.previewers").new_buffer_previewer({
+				title = "Snippet Preview",
+				dyn_title = function(_, entry)
+					return entry.display
+				end,
 				define_preview = function(self, entry)
 					vim.api.nvim_buf_set_lines(self.state.bufnr, 0, -1, false, vim.split(entry.value, "\n"))
-					local filetype = current_filetype
-					vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", filetype)
+					vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", current_filetype)
 					vim.api.nvim_buf_set_option(self.state.bufnr, "modifiable", false)
 				end,
 			}),
@@ -94,17 +84,27 @@ M.telesnip_show = function()
 					local selection = require("telescope.actions.state").get_selected_entry()
 					require("telescope.actions").close(prompt_bufnr)
 					vim.api.nvim_put(vim.split(selection.value, "\n"), "", true, true)
-					vim.notify("Snippet inserted from the " .. current_filetype .. " directory.")
+					vim.notify("Snippet inserted: " .. selection.display)
 				end)
 				return true
 			end,
+			layout_config = {
+				preview_cutoff = 1,
+				width = 0.8,
+				height = 0.8,
+				preview_height = 0.5,
+			},
+			layout_strategy = "vertical",
 		})
 		:find()
 end
 
 M.save_custom_snippet = function()
 	local current_filetype = vim.bo.filetype
-	local custom_snippet_file_path = M.custom_snippet_path .. "custom" .. "." .. current_filetype
+	local custom_snippet_file_path = M.custom_snippet_path .. "custom." .. current_filetype
+
+	-- Create the directory if it doesn't exist
+	vim.fn.mkdir(M.custom_snippet_path, "p")
 
 	-- Get the selected text
 	local selected_text = ""
@@ -124,7 +124,7 @@ M.save_custom_snippet = function()
 		return
 	end
 
-	local snippet_content = "-- " .. function_name .. "\n \n" .. selected_text .. "\n---\n"
+	local snippet_content = "-- " .. function_name .. "\n" .. selected_text .. "\n---\n"
 
 	local file_handle = io.open(custom_snippet_file_path, "a")
 	if file_handle then
