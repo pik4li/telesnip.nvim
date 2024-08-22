@@ -321,4 +321,6 @@ M.save_custom_snippet = function()
 		:find()
 end
 
+create_commands()
+
 return M
