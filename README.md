@@ -41,13 +41,18 @@ Install using your favorite Neovim package manager:
 ```
 
 ## Usage
+<details>
+	
+# preview
+<br>
 
+![telesnip.nvim_preview](https://github.com/pik4li/telesnip.nvim/blob/main/.src/telesnip.nvim_preiew_snippets.gif)
+</details>
 ### Snippet Picker
 
 - **Command**: `:TelesnipShowSnippets`
 - **Keybinding**: (Bind this command to a key of your choice in your Neovim config)
 
-![telesnip.nvim_preview](https://github.com/user-attachments/assets/df82f6f4-2a97-416b-8a8f-d80483857370)
 
 
 ### Save Snippet (Visual Mode)
