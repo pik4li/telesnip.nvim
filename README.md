@@ -42,22 +42,28 @@ Install using your favorite Neovim package manager:
 
 ## Usage
 
+### Snippet Picker
 <details>
+<summary>show snippets</summary>
 	
 # preview
 <br>
 
-![telesnip.nvim_preview](https://github.com/pik4li/telesnip.nvim/blob/main/.src/telesnip.nvim_preiew_snippets.gif)
+![telesnip.nvim_showSnippets](https://github.com/pik4li/telesnip.nvim/blob/main/.src/showSnippets.gif)
 </details>
-
-### Snippet Picker
 
 - **Command**: `:TelesnipShowSnippets`
 - **Keybinding**: (Bind this command to a key of your choice in your Neovim config)
 
-
-
 ### Save Snippet (Visual Mode)
+<details>
+<summary>show custom snippet creation</summary>
+
+# preview
+<br>
+
+![telesnip.nvim_showSnippets](https://github.com/pik4li/telesnip.nvim/blob/main/.src/customSnippets.gif)
+</details>
 
 1. Select the code you want to save as a snippet in visual mode.
 2. Press the keybinding you've set up for `:TelesnipCustomSnippet` in visual mode.
