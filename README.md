@@ -41,6 +41,7 @@ Install using your favorite Neovim package manager:
 ```
 
 ## Usage
+
 <details>
 	
 # preview
@@ -48,6 +49,7 @@ Install using your favorite Neovim package manager:
 
 ![telesnip.nvim_preview](https://github.com/pik4li/telesnip.nvim/blob/main/.src/telesnip.nvim_preiew_snippets.gif)
 </details>
+
 ### Snippet Picker
 
 - **Command**: `:TelesnipShowSnippets`
