@@ -185,17 +185,43 @@ M.save_custom_snippet = function()
 
 					actions.close(prompt_bufnr)
 
-					-- if current_filetype == "sh" then
-					-- 	local comment = "# "
-					-- elseif current_filetype == "lua" then
-					-- 	local comment = "-- "
-					-- else
-					-- 	local comment = ""
-					-- end
-					-- local snippet_content = comment .. snippet_name .. "\n" .. selected_text .. "\n---"
+					-- Define a table that maps filetypes to their respective comment syntax
+					local comment_syntax = {
+						sh = "# ",
+						bash = "# ",
+						zsh = "# ",
+						yaml = "# ",
+						yml = "# ",
+						make = "# ",
+						lua = "-- ",
+						vim = "-- ",
+						python = "# ",
+						ini = "# ",
+						toml = "# ",
+						c = "// ",
+						cpp = "// ",
+						java = "// ",
+						javascript = "// ",
+						json = "// ",
+						html = "<!-- ",
+						markdown = "<!-- ",
+						md = "<!-- ",
+						css = "/* ",
+						scss = "/* ",
+						php = "-- ",
+						sql = "-- ",
+						bat = "REM ",
+						-- Add more filetypes here as needed
+					}
+
+					-- Retrieve the appropriate comment syntax based on the current filetype
+					local comment = comment_syntax[current_filetype] or ""
+
+					-- Construct the snippet content
+					local snippet_content = comment .. snippet_name .. "\n" .. selected_text .. "\n---"
 
 					-- Format the snippet content and save it
-					local snippet_content = "-- " .. snippet_name .. "\n" .. selected_text .. "\n---"
+					-- local snippet_content = "-- " .. snippet_name .. "\n" .. selected_text .. "\n---"
 					local file_handle = io.open(custom_snippet_file_path, "a")
 					if file_handle then
 						file_handle:write(snippet_content .. "\n")
