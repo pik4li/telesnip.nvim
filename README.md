@@ -47,6 +47,7 @@ Install using your favorite Neovim package manager:
 - **Command**: `:TelesnipShowSnippets`
 - **Keybinding**: (Bind this command to a key of your choice in your Neovim config)
 
+![telesnip.nvim_preview](.src/telesnpi.nvim_preview_snippets.mov)
 ### Save Snippet (Visual Mode)
 
 1. Select the code you want to save as a snippet in visual mode.
