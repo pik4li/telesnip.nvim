@@ -152,7 +152,7 @@ MIT License. See `LICENSE` for more information.
 - [x] Let telescope show preconfigured snippets out of the `telesnip/snippets/<language>/` directory
 - [x] Paste the snippet in directly at your cursor
 - [x] Add snippets easily by selecting it in visual mode and calling the plugin as usual
-- [ ] Fixing the custom snippets
+- [x] Fixing the custom snippets
 - [ ] Add functionality to filter/store in categories
 - [ ] Configure snippets, so that you can auto jump into specific code elements
 - [ ] Maybe refactor the code to get the default snippets from another place
