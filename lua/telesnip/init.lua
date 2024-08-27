@@ -115,7 +115,7 @@ M.telesnip_show = function()
 				preview_cutoff = 1,
 				width = 0.8,
 				height = 0.8,
-				preview_height = 0.5,
+				preview_height = 0.6,
 			},
 			layout_strategy = "vertical",
 		})
