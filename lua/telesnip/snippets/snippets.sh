@@ -30,11 +30,37 @@ get_ip() {
 }
 
 ---
-# echo_essentials
+# bash echo_essentials
 # ─< Helper functions >─────────────────────────────────────────────────────────────────
 echo_error() { printf "\033[0;1;31mError: \033[0;31m\t%s\033[0m\n" "$*"; }
 echo_binfo() { printf "\033[0;1;34mINFO: \033[0;34m\t%s\033[0m\n" "$*"; }
 echo_info() { printf "\033[0;1;35mInfo: \033[0;35m%s\033[0m\n" "$*"; }
+
+---
+# posix echo_essentials
+# ANSI color codes
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+YELLOW='\033[0;33m'
+LIGHT_GREEN='\033[0;92m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+echo_error() {
+    printf "${BOLD}${RED}ERROR: ${NC}${RED}%s${NC}\n" "$1" >&2
+}
+
+echo_info() {
+    printf "${BOLD}${CYAN}INFO: ${NC}${CYAN}%s${NC}\n" "$1"
+}
+
+echo_warning() {
+    printf "${BOLD}${YELLOW}WARNING: ${NC}${YELLOW}%s${NC}\n" "$1"
+}
+
+echo_note() {
+    printf "${BOLD}${LIGHT_GREEN}NOTE: ${NC}${LIGHT_GREEN}%s${NC}\n" "$1"
+}
 
 ---
 # silentexec
