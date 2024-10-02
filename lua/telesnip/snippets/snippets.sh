@@ -32,9 +32,9 @@ get_ip() {
 ---
 # echo_essentials
 # ─< Helper functions >─────────────────────────────────────────────────────────────────
-function echo_error() { echo -e "\033[0;1;31mError: \033[0;31m\t${*}\033[0m"; }
-function echo_binfo() { echo -e "\033[0;1;34mINFO: \033[0;34m\t${*}\033[0m"; }
-function echo_info() { echo -e "\033[0;1;35mInfo: \033[0;35m${*}\033[0m"; }
+echo_error() { printf "\033[0;1;31mError: \033[0;31m\t%s\033[0m\n" "$*"; }
+echo_binfo() { printf "\033[0;1;34mINFO: \033[0;34m\t%s\033[0m\n" "$*"; }
+echo_info() { printf "\033[0;1;35mInfo: \033[0;35m%s\033[0m\n" "$*"; }
 
 ---
 # silentexec
