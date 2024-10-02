@@ -61,7 +61,7 @@ get_packager() {
       debian) inst_debian ;;
       fedora) inst_fedora ;;
       alpine) inst_alpine ;;
-      arch | manjaro | garuda) inst_arch ;;
+      arch | manjaro | garuda | endeavour) inst_arch ;;
       opensuse*) inst_opensuse ;;
       *)
         # Use standard [ ] syntax for string matching
